@@ -1,4 +1,4 @@
-import { app, BrowserWindow,Menu,dialog } from 'electron'
+import { app, BrowserWindow,Menu,dialog, IpcMain, ipcMain } from 'electron'
 import { overlayWindow } from '../'
 import * as fs from 'fs'
 import {ConversionType, SlippiGame} from "@ckoenig1/slippi-js"
@@ -16,7 +16,7 @@ const prompt = require('electron-prompt');
 //app.disableHardwareAcceleration()
 
 let window: BrowserWindow
-let client : Client
+let workerWindow : BrowserWindow
 let Slippipath: string
 let tracker: statTracker
 let trackerData: statTracker | undefined
@@ -95,182 +95,52 @@ async function getFile(){
   });
 }
 
-async function calcStats(){
-  console.log("pressed shift E")
-  fs.readdir(Slippipath,(err,files)=>{
-    if(err) throw err;
-    if(!userInfo){
-      userInfo = {main: -1,secondary:-1,userCode:""}
-    }
-    if(!trackerData){
-      tracker = new statTracker(null,userInfo)
-    }else{
-      tracker = new statTracker(trackerData, userInfo)
-    }
-    var index;
-    var file;
-    // loop through all files in directory
-    for(index in files){
-      file = files[index]
-      if(file != "old_games"){
-        // calc the stats for each game
-        console.log("processing: " + Slippipath+"\\"+file)
-        const game = new SlippiGame(Slippipath+"\\"+file)
-        tracker.addGame(game,opponentMap,stageMap,userInfo)
 
-        // move all files that have been processed into the old_games folder
-        mv(Slippipath+"\\"+file,Slippipath+"\\old_games\\"+file,{mkdirp: true},function(err:any){
-          if(err) throw err;
-        })
-      }
-    }
-    fs.writeFile("tracker.txt", JSON.stringify(tracker), function(err) {
-      if (err) {
-          console.log(err);
-      }
-    });
+  function calcStats(){
+    workerWindow.webContents.send("Begin Calc")
+  }
+// async function calcStats(){
+//   console.log("pressed shift E")
+//   fs.readdir(Slippipath,(err,files)=>{
+//     if(err) throw err;
+//     if(!userInfo){
+//       userInfo = {main: -1,secondary:-1,userCode:""}
+//     }
+//     if(!trackerData){
+//       tracker = new statTracker(null,userInfo)
+//     }else{
+//       tracker = new statTracker(trackerData, userInfo)
+//     }
+//     var index;
+//     var file;
+//     // loop through all files in directory
+//     for(index in files){
+//       file = files[index]
+//       if(file != "old_games"){
+//         // calc the stats for each game
+//         console.log("processing: " + Slippipath+"\\"+file)
+//         const game = new SlippiGame(Slippipath+"\\"+file)
+//         tracker.addGame(game,opponentMap,stageMap,userInfo)
 
-    window.webContents.send('fromMain', tracker)
-    trackerData = tracker
+//         // move all files that have been processed into the old_games folder
+//         mv(Slippipath+"\\"+file,Slippipath+"\\old_games\\"+file,{mkdirp: true},function(err:any){
+//           if(err) throw err;
+//         })
+//       }
+//     }
+//     fs.writeFile("tracker.txt", JSON.stringify(tracker), function(err) {
+//       if (err) {
+//           console.log(err);
+//       }
+//     });
 
-    // const mutationLogin = `mutation{
-    //   login(options: {username: "chris", password: "chris"}){
-    //     errors{
-    //       field
-    //       message
-    //     }
-    //     user{
-    //       id
-    //       username
-    //     }
-    //   }
-    // }`
-
-    // const meQuery = `{
-    //   me{
-    //     id
-    //     username
-    //   }
-    // }`
-    
-    // // login and then send updated stats to the server
-    // client.mutation(mutationLogin).toPromise().then(async (result) => {
-      
-    //   window.webContents.session.cookies.get({}).then((cooks) => {
-    //     console.log(cooks[0])
-    //     client.query(meQuery).toPromise().then(result => console.log(result))
-    //   })
-      
-      
-    //   console.log(result)
-      // console.log(result); // { data: ... }
-      // const fucker = async (i:string) => {
-      //   let mainStats = tracker.char1.players[i]
-      //   let secStats = tracker.char2.players[i]
-      //   let characterMain: number = tracker.char1.character
-      //   let characterSec: number = tracker.char2.character
-      //   opponentMap[i].forEach(async (stage) => {
-      //     if(mainStats?.[stage]){
-      //      const matchupMut = `mutation{
-      //         updateStats(stats: ${(mainStats[stage]).toString() + ",stageID: " + stage + ",opponentCode: " + "\""+i+"\"" + ",charId: " + characterMain + "}"  }){
-      //           losses
-      //           totalGames
-      //         }
-      //       }`;
-      //       await client.mutation(matchupMut).toPromise().then(result => console.log(result))
-      //     }
-      //     if(secStats?.[stage]){
-      //       const matchupMut2 = `mutation{
-      //         updateStats(stats: ${(secStats[stage]).toString() + ",stageID: " + stage + ",opponentCode: " + "\""+i+"\"" + ",charId: " + characterSec + "}"  }){
-      //           losses
-      //           totalGames
-      //         }
-      //       }`;
-      //       await client.mutation(matchupMut2).toPromise().then(result => console.log(result))
-      //     }
-      //   })
-      //   // update total for each player
-      //   if(i === "SQUI#760"){
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //     console.log(tracker.total.players[i])
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //     console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-      //   }
-      //   const opTotMut = `mutation{
-      //     updateStats(stats: ${(tracker.total.players[i]).toString() + ",stageID: -1" + ",opponentCode: " + "\""+i+"\"" + ",charId: -1" + "}"  }){
-      //       losses
-      //       totalGames
-      //     }
-      //   }`;
-      //   await client.mutation(opTotMut).toPromise().then(result => console.log(result))
-
-        
-      // }
-      // // this for loop sends all the opponent matchup stat updates
-      // // does not send the total stat updates 
-      // var i: string
-      // for( i in opponentMap){
-      //   fucker(i)
-      // }
-      // // now send total stat updates
-      // stageMap.forEach(async (id) => {
-      //   let totStats = tracker.total.stages[id]
-      //   let mainStats = tracker.char1.stages[id]
-      //   let secStats = tracker.char2.stages[id]
-      //   let stageTotMut = `mutation{
-      //     updateStats(stats: ${(totStats).toString() + ",stageID: " + id + ",opponentCode: " + "\"total\"" + ",charId: -1 }"  }){
-      //       losses
-      //       totalGames
-      //     }
-      //   }`;
-      //   let mainStageMut = `mutation{
-      //     updateStats(stats: ${(mainStats).toString() + ",stageID: " + id + ",opponentCode: " + "\"total\"" + ",charId: " +tracker.char1.character + "}"  }){
-      //       losses
-      //       totalGames
-      //     }
-      //   }`;
-      //   let secStageMut = `mutation{
-      //     updateStats(stats: ${(secStats).toString() + ",stageID: " + id + ",opponentCode: " + "\"total\"" + ",charId: " +tracker.char2.character + "}"  }){
-      //       losses
-      //       totalGames
-      //     }
-      //   }`;
-      //   await client.mutation(stageTotMut).toPromise().then(result => console.log(result))
-      //   await client.mutation(mainStageMut).toPromise().then(result => console.log(result))
-      //   await client.mutation(secStageMut).toPromise().then(result => console.log(result))
-      // })
-      // const totalMut = `mutation{
-      //   updateStats(stats: ${(tracker.total.stats).toString() + ",stageID: -1" + ",opponentCode: " + "\"total\"" + ",charId: -1}"  }){
-      //     losses
-      //     totalGames
-      //   }
-      // }`;
-      // const char1TotMut = `mutation{
-      //   updateStats(stats: ${(tracker.char1.total).toString() + ",stageID: -1"  + ",opponentCode: " + "\"total\"" + ",charId: " +tracker.char1.character + "}"  }){
-      //     losses
-      //     totalGames
-      //   }
-      // }`;
-      // const char2TotMut = `mutation{
-      //   updateStats(stats: ${(tracker.char2.total).toString() + ",stageID: -1" + ",opponentCode: " + "\"total\"" + ",charId: " +tracker.char2.character + "}"  }){
-      //     losses
-      //     totalGames
-      //   }
-      // }`;
-      // await client.mutation(totalMut).toPromise()
-      // await client.mutation(char1TotMut).toPromise()
-      // await client.mutation(char2TotMut).toPromise()
-      // // wipe the opponentMap so that repeated updates dont update unecessary players
-      // console.log(opponentMap)
-      // console.log(await window.webContents.session.cookies.get({}))
-    // }).catch(err => console.log(err));
+//     window.webContents.send('fromMain', tracker)
+//     trackerData = tracker
 
 
-  })
-}
+
+//   })
+// }
 
 function createWindow () {
   window = new BrowserWindow({
@@ -288,13 +158,23 @@ function createWindow () {
 
   window.loadURL('http://localhost:3000/')
   //window.webContents.openDevTools()
-  client = createClient({
-    url: 'http://localhost:4000/graphql',
-    fetchOptions: {
-      credentials: 'include',
-    },
+  // client = createClient({
+  //   url: 'http://localhost:4000/graphql',
+  //   fetchOptions: {
+  //     credentials: 'include',
+  //   },
     
-  });
+  // });
+
+
+  workerWindow = new BrowserWindow({
+    show: false,
+    webPreferences:{
+      nodeIntegration: true, // is default value after Electron v5
+    },
+  }
+  )
+  workerWindow.loadFile("worker.html")
   
 
   const template:Electron.MenuItemConstructorOptions[] = [
@@ -397,5 +277,8 @@ app.on('ready', () => {
   catch(err){
     Slippipath = ""
   }
+  ipcMain.on('finished calc', (event, arg) =>{
+    window.webContents.send('fromMain', arg)
+  })
   
 })
