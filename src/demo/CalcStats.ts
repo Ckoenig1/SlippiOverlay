@@ -1,5 +1,5 @@
 import { SlippiGame } from "@ckoenig1/slippi-js"
-import mv = require("mv")
+const mv = require("mv")
 import { statTracker } from "./statTracker"
 import { Map } from './types/Map'
 import * as fs from 'fs'
@@ -12,8 +12,8 @@ let Slippipath: string
 let tracker: statTracker
 let trackerData: statTracker | undefined
 let userInfo: {main: number, secondary: number,userCode: string}
-export let opponentMap: Map = {}
-export let stageMap: number[] = []
+let opponentMap: Map = {}
+let stageMap: number[] = []
 
 
 fs.readFile("tracker.txt", function(err,data) {
@@ -77,5 +77,9 @@ async function calcStats(){
     })
   }
   ipcRenderer.on("Begin Calc",(event,arg)=> {
-      calcStats()
+    console.log("made it into worker")
+    console.log(arg)
+    console.log(arg[0])
+    Slippipath = arg
+    calcStats()
   })

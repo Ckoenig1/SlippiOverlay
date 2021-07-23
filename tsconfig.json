@@ -1,15 +1,26 @@
+// {
+//   "compilerOptions": {
+//     "target": "ES2018",
+//     "alwaysStrict": true,
+//     "strict": true,
+//     "module": "CommonJS",
+//     "moduleResolution": "node",
+//     "sourceMap": true,
+//     "outDir": "dist",
+//     "declaration": true
+//   },
+//   "include": [
+//     "src/**/*"
+//   ]
+// }
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "alwaysStrict": true,
-    "strict": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist",
-    "declaration": true
-  },
-  "include": [
-    "src/**/*"
-  ]
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
+    "moduleResolution": "node"
+  }
 }

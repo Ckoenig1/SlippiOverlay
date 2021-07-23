@@ -39,8 +39,11 @@
     "@types/node": "^14.14.31",
     "@types/throttle-debounce": "2.x.x",
     "prebuildify": "4.x.x",
+    "ts-loader": "^9.2.3",
     "ts-node": "9.x.x",
-    "typescript": "4.x.x"
+    "typescript": "^4.3.5",
+    "webpack": "^5.46.0",
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {
     "@types/mv": "^2.1.1",
@@ -53,8 +56,8 @@
     "mv": "^2.1.1",
     "node-gyp-build": "4.x.x",
     "throttle-debounce": "2.x.x",
-    "typescript-compile": "^0.0.3",
     "urql": "^2.0.2",
+    "ws": "^7.5.3",
     "yarn": "^1.22.10"
   },
   "gypfile": true,

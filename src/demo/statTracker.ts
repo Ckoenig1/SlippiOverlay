@@ -110,26 +110,35 @@ export class statTracker implements CumulativeStats {
     let self: any;
     let opponent: any;
     // maybe turn this into function
+    // changed metadata to settings
     let player: any = metaData?.players?.[0];
-    if (player) {
-      if (player.names.code == userInfo.userCode) {
-        self = metaData?.players?.[0];
-        opponent = metaData?.players?.[1];
+    if(player !== undefined){
+      if (player?.names && metaData?.players?.[1]?.names) {
+        console.log(player.names)
+        console.log("woah there")
+        if (player?.names?.code == userInfo.userCode) {
+          self = metaData?.players?.[0];
+          opponent = metaData?.players?.[1];
+        }
+        else {
+          self = metaData?.players?.[1];
+          opponent = metaData?.players?.[0];
+        }
+        let selfID = Number(Object.keys(Object(self?.characters))[0]);
+        let opponentID = Number(Object.keys(Object(opponent?.characters))[0]);
+        let opponentCode = String(opponent.names.code);
+        let stageID = Number(settings?.stageId);
+        this.categorize(new gameStat(game,userInfo),game, selfID, opponentID, opponentCode, stageID, opponentMap, stageMap,userInfo);
       }
       else {
-        self = metaData?.players?.[1];
-        opponent = metaData?.players?.[0];
+        console.log("undefined players");
+        console.log(settings?.stageId);
       }
-      let selfID = Number(Object.keys(Object(self?.characters))[0]);
-      let opponentID = Number(Object.keys(Object(opponent?.characters))[0]);
-      let opponentCode = String(opponent.names.code);
-      let stageID = Number(settings?.stageId);
-      this.categorize(new gameStat(game,userInfo),game, selfID, opponentID, opponentCode, stageID, opponentMap, stageMap,userInfo);
     }
-    else {
-      console.log("undefined players");
-      console.log(settings?.stageId);
+    else{
+      console.log("player undefined")
     }
+    
 
   }
 

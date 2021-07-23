@@ -1,4 +1,4 @@
-import { app, BrowserWindow,Menu,dialog, IpcMain, ipcMain } from 'electron'
+import { app, BrowserWindow,Menu,dialog, ipcMain } from 'electron'
 import { overlayWindow } from '../'
 import * as fs from 'fs'
 import {ConversionType, SlippiGame} from "@ckoenig1/slippi-js"
@@ -97,7 +97,8 @@ async function getFile(){
 
 
   function calcStats(){
-    workerWindow.webContents.send("Begin Calc")
+    console.log("beginning")
+    workerWindow.webContents.send("Begin Calc",Slippipath)
   }
 // async function calcStats(){
 //   console.log("pressed shift E")
@@ -168,9 +169,10 @@ function createWindow () {
 
 
   workerWindow = new BrowserWindow({
-    show: false,
+    show: true,
     webPreferences:{
       nodeIntegration: true, // is default value after Electron v5
+      contextIsolation: false,
     },
   }
   )
@@ -178,81 +180,80 @@ function createWindow () {
   
 
   const template:Electron.MenuItemConstructorOptions[] = [
-    
-  // { role: 'fileMenu' }
-  {
-    label: 'File',
-    submenu: [
-      isMac ? { role: 'close' } : { role: 'quit' }
-    ]
-  },
-  // { role: 'editMenu' }
-  {
-    label: 'Edit',
-    submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-    ]
-  },
-  // { role: 'viewMenu' }
-  {
-    label: 'View',
-    submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools' },
-      { type: 'separator' },
-      { role: 'resetZoom' },
-      { role: 'zoomIn' },
-      { role: 'zoomOut' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' }
-    ]
-  },
-  // { role: 'windowMenu' }
-  {
-    label: 'Window',
-    submenu: [
-      { role: 'minimize' },
-      { role: 'zoom' },
-    ]
-  },
-  {
-    role: 'help',
-    submenu: [
-      {
-        label: 'Learn More',
-        click: async () => {
-          const { shell } = require('electron')
-          await shell.openExternal('https://electronjs.org')
+    // { role: 'fileMenu' }
+    {
+      label: 'File',
+      submenu: [
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    // { role: 'editMenu' }
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+      ]
+    },
+    // { role: 'viewMenu' }
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    // { role: 'windowMenu' }
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+      ]
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Learn More',
+          click: async () => {
+            const { shell } = require('electron')
+            await shell.openExternal('https://electronjs.org')
+          }
         }
-      }
-    ]
-  },
-  {
-    label: 'Slippi Settings',
-    submenu: [
-      {
-        label: 'Set replay location',
-        accelerator: 'CmdOrCtrl+O',
-        click(){
-          getFile();
+      ]
+    },
+    {
+      label: 'Slippi Settings',
+      submenu: [
+        {
+          label: 'Set replay location',
+          accelerator: 'CmdOrCtrl+O',
+          click(){
+            getFile();
+          },
         },
-      },
-      {
-        label: 'Calc stats',
-        accelerator: 'Shift+E',
-        click(){
-          calcStats();
-        },
-      }
-    ]
-  },
-];
+        {
+          label: 'Calc stats',
+          accelerator: 'Shift+E',
+          click(){
+            calcStats();
+          },
+        }
+      ]
+    },
+  ];
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 
@@ -267,6 +268,10 @@ app.on('ready', () => {
     createWindow,
     process.platform === 'linux' ? 1000 : 0
   )
+  ipcMain.on('finished calc', (event, arg) =>{
+    console.log(arg)
+    window.webContents.send('fromMain', arg)
+  })
   try{
     fs.readFile('Slippipath.txt', 'utf-8',(err, data) => {
     if (err) throw err;
@@ -277,8 +282,6 @@ app.on('ready', () => {
   catch(err){
     Slippipath = ""
   }
-  ipcMain.on('finished calc', (event, arg) =>{
-    window.webContents.send('fromMain', arg)
-  })
+  
   
 })
