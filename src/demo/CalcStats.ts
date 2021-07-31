@@ -77,9 +77,6 @@ async function calcStats(){
     })
   }
   ipcRenderer.on("Begin Calc",(event,arg)=> {
-    console.log("made it into worker")
-    console.log(arg)
-    console.log(arg[0])
     Slippipath = arg
     calcStats()
   })

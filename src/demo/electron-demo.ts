@@ -1,13 +1,9 @@
 import { app, BrowserWindow,Menu,dialog, ipcMain } from 'electron'
 import { overlayWindow } from '../'
 import * as fs from 'fs'
-import {ConversionType, SlippiGame} from "@ckoenig1/slippi-js"
-import * as mv from 'mv'
 import * as _ from 'lodash'
-import { Client, createClient } from '@urql/core'
 import 'isomorphic-unfetch'
 import * as path from 'path'
-import { statTracker } from './statTracker'
 import { Map } from './types/Map'
 const prompt = require('electron-prompt');
 
@@ -18,30 +14,9 @@ const prompt = require('electron-prompt');
 let window: BrowserWindow
 let workerWindow : BrowserWindow
 let Slippipath: string
-let tracker: statTracker
-let trackerData: statTracker | undefined
 let userInfo: {main: number, secondary: number,userCode: string}
 export let opponentMap:Map = {}
 export let stageMap: number[] = []
-
-
-fs.readFile("tracker.txt", function(err,data) {
-  if (err) {
-      console.log(err);
-  }
-  else{
-    trackerData = JSON.parse(data.toString())
-  }
-});
-
-fs.readFile("UserInfo.txt", function(err,data) {
-  if(err) {
-    console.log(err)
-  }
-  else{
-    userInfo = JSON.parse(data.toString())
-  }
-})
 
 
 
@@ -169,7 +144,7 @@ function createWindow () {
 
 
   workerWindow = new BrowserWindow({
-    show: true,
+    show: false,
     webPreferences:{
       nodeIntegration: true, // is default value after Electron v5
       contextIsolation: false,

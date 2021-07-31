@@ -108,6 +108,7 @@ export class gameStat implements Stats {
           // time in seconds
           this.timePlayed += (stats?.lastFrame / 60);
           // sort stocks by frame to get chronological order
+          // can probably trim this
           let stocks = stats?.stocks.filter((stock: StockType) => stock.endFrame !== null && stock.endFrame !== undefined);
           stocks = stocks.sort((a: StockType, b: StockType) => {
             if (a.endFrame && b.endFrame) {
@@ -125,7 +126,6 @@ export class gameStat implements Stats {
           var comeBack = false;
           var comeBackCount = 0;
           var stock;
-
           for (i = 0; i < stocks.length; i++) {
             stock = stocks[i];
             if (stock.playerIndex == selfIndex) {
@@ -159,7 +159,8 @@ export class gameStat implements Stats {
           this.avgKillPercent = this.avgKillPercent / ((4 - opponentStocks) || 1);
 
           // k/d must account for no deaths
-          this.killDeath = 4.0 - opponentStocks / (4.0 - selfStocks || 1);
+          this.killDeath = (4.0 - opponentStocks) / ((4.0 - selfStocks) || 1);
+         
 
           // fourstocks
           if (selfStocks == 4) {
@@ -223,6 +224,8 @@ export class gameStat implements Stats {
   selfDestruct(stock: any, stats: StatsType, selfIndex: number) {
     // Here we are going to grab the opponent's punishes and see if one of them was
     // responsible for ending this stock, if so show the kill move, otherwise assume SD
+    // TODO: Swapped true and false check that this works correctly
+    
     let playerIndex = 1 - selfIndex;
     const punishes = stats?.conversions;
 
@@ -231,7 +234,7 @@ export class gameStat implements Stats {
 
     for (i = 0; i < punishes.length; i++) {
       conv = punishes[i];
-      if (conv.playerIndex == playerIndex && conv.endFrame == stock.endFrame) {
+      if (conv.playerIndex == selfIndex && conv.didKill && conv.lastHitBy === playerIndex && conv.endFrame === stock.endFrame) {
         return false;
       }
     }
